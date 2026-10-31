@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NEON SNAKE | Future Edition</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+            <h1>NEON <span>SNAKE</span></h1>
+            <p>THE FUTURE ARCADE EXPERIENCE</p>
+        </header>
+
+        <div class="score-board">
+            <div>
+                <small>SCORE</small>
+                <h2 id="score">000</h2>
+            </div>
+
+            <div>
+                <small>HIGH SCORE</small>
+                <h2 id="highScore">000</h2>
+            </div>
+        </div>
+
+        <div class="game-container">
+
+            <canvas id="gameCanvas"
+                width="400"
+                height="400">
+            </canvas>
+
+            <div id="overlay">
+                <h2 id="message">READY?</h2>
+                <p id="subMessage">ENTER THE NEON WORLD</p>
+                <button id="startBtn">START GAME</button>
+            </div>
+
+        </div>
+
+        <div class="controls">
+
+            <button id="pauseBtn">PAUSE</button>
+            <button id="restartBtn">RESTART</button>
+
+        </div>
+
+        <div class="mobile-controls">
+            <button data-dir="up">▲</button>
+
+            <div>
+                <button data-dir="left">◀</button>
+                <button data-dir="down">▼</button>
+                <button data-dir="right">▶</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>USE ARROW KEYS OR WASD TO CONTROL</p>
+            <p>© 2026 NEON SNAKE PROJECT</p>
+        </footer>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

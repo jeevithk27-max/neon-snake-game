@@ -1,0 +1,5 @@
+Neon-Snake-Game/
+│
+├── index.html
+├── style.css
+└── script.js

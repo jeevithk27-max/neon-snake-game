@@ -1,0 +1,337 @@
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const box = 20;
+
+let snake = [];
+let food = {};
+
+let direction = "RIGHT";
+let nextDirection = "RIGHT";
+
+let score = 0;
+let speed = 130;
+
+let gameInterval = null;
+let running = false;
+let paused = false;
+
+let highScore = Number(
+    localStorage.getItem("neonHighScore") || 0
+);
+
+document.getElementById("highScore").innerText =
+    String(highScore).padStart(3, "0");
+
+function initializeGame() {
+
+    snake = [
+        { x: 200, y: 200 },
+        { x: 180, y: 200 },
+        { x: 160, y: 200 }
+    ];
+
+    direction = "RIGHT";
+    nextDirection = "RIGHT";
+
+    score = 0;
+    speed = 130;
+
+    document.getElementById("score").innerText = "000";
+
+    generateFood();
+    drawGame();
+}
+
+function generateFood() {
+
+    do {
+        food = {
+            x: Math.floor(Math.random() * 20) * box,
+            y: Math.floor(Math.random() * 20) * box
+        };
+    } while (
+        snake.some(part =>
+            part.x === food.x && part.y === food.y
+        )
+    );
+}
+
+function drawGame() {
+
+    ctx.fillStyle = "#030807";
+    ctx.fillRect(0, 0, 400, 400);
+
+    // Neon grid
+
+    ctx.strokeStyle = "rgba(0,255,136,0.08)";
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 400; i += box) {
+
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 400);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(400, i);
+        ctx.stroke();
+    }
+
+    // Food
+
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = "#ff3355";
+
+    ctx.fillStyle = "#ff3355";
+
+    ctx.beginPath();
+    ctx.arc(
+        food.x + 10,
+        food.y + 10,
+        7,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    // Snake
+
+    snake.forEach((part, index) => {
+
+        ctx.fillStyle = index === 0
+            ? "#ffffff"
+            : "#00ff88";
+
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#00ff88";
+
+        ctx.fillRect(
+            part.x + 2,
+            part.y + 2,
+            16,
+            16
+        );
+
+    });
+
+    ctx.shadowBlur = 0;
+}
+
+function moveSnake() {
+
+    if (!running || paused) return;
+
+    direction = nextDirection;
+
+    let head = {
+        x: snake[0].x,
+        y: snake[0].y
+    };
+
+    if (direction === "UP") head.y -= box;
+    if (direction === "DOWN") head.y += box;
+    if (direction === "LEFT") head.x -= box;
+    if (direction === "RIGHT") head.x += box;
+
+    const ateFood =
+        head.x === food.x && head.y === food.y;
+
+    // Wall collision
+
+    if (
+        head.x < 0 ||
+        head.x >= 400 ||
+        head.y < 0 ||
+        head.y >= 400
+    ) {
+        gameOver();
+        return;
+    }
+
+    // Body collision
+
+    const body = ateFood ? snake : snake.slice(0, -1);
+
+    if (body.some(part =>
+        part.x === head.x && part.y === head.y
+    )) {
+        gameOver();
+        return;
+    }
+
+    snake.unshift(head);
+
+    if (ateFood) {
+
+        score += 10;
+
+        document.getElementById("score").innerText =
+            String(score).padStart(3, "0");
+
+        generateFood();
+
+        if (score > highScore) {
+
+            highScore = score;
+
+            localStorage.setItem(
+                "neonHighScore",
+                highScore
+            );
+
+            document.getElementById("highScore").innerText =
+                String(highScore).padStart(3, "0");
+        }
+
+        // Increase difficulty
+
+        if (speed > 65) {
+
+            speed -= 5;
+
+            clearInterval(gameInterval);
+
+            gameInterval = setInterval(
+                moveSnake,
+                speed
+            );
+        }
+
+    } else {
+
+        snake.pop();
+    }
+
+    drawGame();
+}
+
+function startGame() {
+
+    clearInterval(gameInterval);
+
+    initializeGame();
+
+    running = true;
+    paused = false;
+
+    document.getElementById("overlay").style.display =
+        "none";
+
+    document.getElementById("pauseBtn").innerText =
+        "PAUSE";
+
+    gameInterval = setInterval(moveSnake, speed);
+}
+
+function gameOver() {
+
+    running = false;
+
+    clearInterval(gameInterval);
+
+    document.getElementById("overlay").style.display =
+        "flex";
+
+    document.getElementById("message").innerText =
+        "GAME OVER";
+
+    document.getElementById("subMessage").innerText =
+        "YOUR SCORE: " + score;
+
+    document.getElementById("startBtn").innerText =
+        "PLAY AGAIN";
+}
+
+function pauseGame() {
+
+    if (!running) return;
+
+    paused = !paused;
+
+    document.getElementById("pauseBtn").innerText =
+        paused ? "RESUME" : "PAUSE";
+}
+
+// Keyboard controls
+
+document.addEventListener("keydown", function(event) {
+
+    const key = event.key.toLowerCase();
+
+    const keys = [
+        "arrowup",
+        "arrowdown",
+        "arrowleft",
+        "arrowright",
+        " "
+    ];
+
+    if (keys.includes(key)) event.preventDefault();
+
+    if (key === "arrowup" || key === "w") {
+        if (direction !== "DOWN") nextDirection = "UP";
+    }
+
+    else if (key === "arrowdown" || key === "s") {
+        if (direction !== "UP") nextDirection = "DOWN";
+    }
+
+    else if (key === "arrowleft" || key === "a") {
+        if (direction !== "RIGHT") nextDirection = "LEFT";
+    }
+
+    else if (key === "arrowright" || key === "d") {
+        if (direction !== "LEFT") nextDirection = "RIGHT";
+    }
+
+    else if (key === " ") {
+        pauseGame();
+    }
+
+});
+
+// Button controls
+
+document.getElementById("startBtn")
+    .addEventListener("click", startGame);
+
+document.getElementById("restartBtn")
+    .addEventListener("click", startGame);
+
+document.getElementById("pauseBtn")
+    .addEventListener("click", pauseGame);
+
+// Mobile controls
+
+document.querySelectorAll(".mobile-controls button")
+    .forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            const dir = button.dataset.dir.toUpperCase();
+
+            if (dir === "UP" && direction !== "DOWN")
+                nextDirection = "UP";
+
+            if (dir === "DOWN" && direction !== "UP")
+                nextDirection = "DOWN";
+
+            if (dir === "LEFT" && direction !== "RIGHT")
+                nextDirection = "LEFT";
+
+            if (dir === "RIGHT" && direction !== "LEFT")
+                nextDirection = "RIGHT";
+
+        });
+
+    });
+
+// Initial screen
+
+initializeGame();
